@@ -36,4 +36,4 @@ while True:
     except Exception as e:
         print(e)
         print(f'{datetime.now()}  failed reaping this time, waiting for next round')
-    sleep(60)
+    sleep(120)
