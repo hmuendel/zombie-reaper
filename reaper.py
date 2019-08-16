@@ -2,7 +2,7 @@ import requests
 from time import sleep
 from datetime import datetime
 
-print(f'{datetime.now()}  fueling chainsaw')
+print(f'{datetime.now()}  searching garage for useful tools')
 # give the worker some time to come up
 sleep(60)
 print(f'{datetime.now()} 🔥 now its time, fueling chainsaw...')
