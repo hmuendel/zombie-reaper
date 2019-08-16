@@ -29,7 +29,10 @@ while True:
                                  data=f'{10_000_000_000}').status_code
                         del flagged_containers[container]
             else:
-                flagged_containers.pop(container)
+                if container in flagged_containers:
+                    print(f'{datetime.now()} {container} seems innocent is now {status}')
+                else:
+                    print(f'{datetime.now()} {container} seems innocent from the beginning with {status}')
             # relax a little to not stress garden to much
             sleep(1)
         print(f'{datetime.now()}❓{len(flagged_containers)} containers are behaving suspicious')
