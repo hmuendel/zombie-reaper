@@ -6,7 +6,7 @@ from datetime import datetime
 
 flagged_containers = {}
 
-print(f'{datetime.now()}  searching garage for useful tools')
+print(f'{datetime.now()}  searching garage for useful tools...')
 # give the worker some time to come up
 sleep(60)
 print(f'{datetime.now()} 🔥 now its time, fueling chainsaw...')
@@ -33,6 +33,7 @@ while True:
             # relax a little to not stress garden to much
             sleep(1)
         print(f'{datetime.now()}❓{len(flagged_containers)} containers are behaving suspicious')
-    except:
+    except Exception as e:
+        print(e)
         print(f'{datetime.now()}  failed reaping this time, waiting for next round')
     sleep(60)
