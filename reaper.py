@@ -28,6 +28,8 @@ while True:
                         requests.put(f'http://localhost:7777/containers/{container}/grace_time',
                                  data=f'{10_000_000_000}').status_code
                         del flagged_containers[container]
+            else:
+                flagged_containers.pop(container)
             # relax a little to not stress garden to much
             sleep(1)
         print(f'{datetime.now()}❓{len(flagged_containers)} containers are behaving suspicious')
