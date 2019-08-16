@@ -2,8 +2,11 @@ import requests
 from time import sleep
 from datetime import datetime
 
+print(f'{datetime.now()}  fueling chainsaw')
+# give the worker some time to come up
+sleep(60)
+print(f'{datetime.now()} 🔥 now its time, fueling chainsaw...')
 while True:
-    print(f'{datetime.now()} 🔥 fueling chainsaw')
     containers = requests.get('http://localhost:7777/containers').json()['Handles']
     print(f'{datetime.now()}  🔭 looking for zombies')
     for container in containers:
