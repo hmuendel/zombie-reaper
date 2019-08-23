@@ -1,42 +1,59 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import logging
+from collections import Counter
+from time import sleep
 
 import requests
-from time import sleep
-from datetime import datetime
+
+from log_utils import configure
+
+configure()
+log = logging.getLogger('reaper')
 
 flagged_containers = {}
+MAX_LEVEL = 3
 
-print(f'{datetime.now()}  searching garage for useful tools...')
+log.info(f'searching garage for useful tools...')
 # give the worker some time to come up
 sleep(60)
-print(f'{datetime.now()} 🔥 now its time, fueling chainsaw...')
+log.info(f'🔥 now its time, fueling chainsaw...')
+log.info('')
+dead_zombies_total = 0
 while True:
     try:
+        dead_zombies = 0
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
-        print(f'{datetime.now()}  🔭 looking for zombies and found {len(containers)} containers')
+        log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
         for container in containers:
             status = requests.get(f'http://localhost:7777/containers/{container}/info').status_code
             if status == 500:
                 if container not in flagged_containers:
-                    print(f'{datetime.now()}  First warning for container {container}')
+                    # log.info(f' First warning for container {container}')
                     flagged_containers[container] = 0
                 else:
                     flagged_containers[container] += 1
-                    if flagged_containers[container] > 10:
+                    if flagged_containers[container] > MAX_LEVEL:
                         # give garden 10 sec to kill the zombie
-                        print(f'{datetime.now()} 🧟‍️ 🔫 Die zombie, {container} die!')
-                        requests.put(f'http://localhost:7777/containers/{container}/grace_time',
-                                 data=f'{10_000_000_000}').status_code
+                        # log.info(f'🧟‍️ 🔫 Die zombie, {container} die!')
+                        requests.put(f'http://localhost:7777/containers/{container}/grace_time', data=f'{10_000_000_000}')
                         del flagged_containers[container]
+                        dead_zombies += 1
             else:
                 if container in flagged_containers:
-                    print(f'{datetime.now()} {container} seems innocent is now {status}')
-                else:
-                    print(f'{datetime.now()} {container} seems innocent from the beginning with {status}')
+                    log.info(f'{container} seems innocent status became {status}')
+                # else:
+                #     log.info(f'{container} seems innocent from the beginning with {status}')
             # relax a little to not stress garden to much
-            sleep(1)
-        print(f'{datetime.now()}❓{len(flagged_containers)} containers are behaving suspicious')
-    except Exception as e:
-        print(e)
-        print(f'{datetime.now()}  failed reaping this time, waiting for next round')
-    sleep(120)
+            sleep(0.2)
+        dead_zombies_total += dead_zombies
+        log.info(f'killed {dead_zombies} 🧟‍ this round and {dead_zombies_total} in total️')
+        log.info(f'{len(flagged_containers)} containers are behaving suspicious')
+    except Exception:
+        log.exception(f' failed reaping this time, waiting for next round')
+
+    log.info('')
+    log.info(f'Flagged containers (max_level: {MAX_LEVEL})')
+    for k, v in Counter(flagged_containers.values()).items():
+        log.info(f'Level {k}: {v} Containers')
+
+    sleep(60)
