@@ -30,7 +30,7 @@ MAX_LEVEL = 3
 
 log.info(f'searching garage for useful tools...')
 # give the worker some time to come up
-sleep(1)
+sleep(60)
 log.info(f'🔥 now its time, fueling chainsaw...')
 log.info('')
 dead_zombies_total = 0
