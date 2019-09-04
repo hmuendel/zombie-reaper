@@ -14,7 +14,7 @@ log.debug(f'configuring ')
 
 shutdown = False
 
-def prepare_shutdown(s):
+def prepare_shutdown(s, ptr):
     global shutdown
     log.info(f'received termination signal: {s}, preparing shutdown')
     shutdown = True
@@ -30,7 +30,7 @@ MAX_LEVEL = 3
 
 log.info(f'searching garage for useful tools...')
 # give the worker some time to come up
-sleep(60)
+sleep(1)
 log.info(f'🔥 now its time, fueling chainsaw...')
 log.info('')
 dead_zombies_total = 0
@@ -40,7 +40,7 @@ while not shutdown:
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
         log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
         for container in containers:
-            status = requests.get(f'http://localhost:7777/containers/{container}/info').status_code
+            status = requests.get(f'http://localhost:7777/containers/{container}/info', max_retries=1, timeout=1).status_code
             if status == 500:
                 if container not in flagged_containers:
                     # log.info(f' First warning for container {container}')
@@ -50,7 +50,7 @@ while not shutdown:
                     if flagged_containers[container] > MAX_LEVEL:
                         # give garden 10 sec to kill the zombie
                         # log.info(f'🧟‍️ 🔫 Die zombie, {container} die!')
-                        requests.put(f'http://localhost:7777/containers/{container}/grace_time', data=f'{10_000_000_000}')
+                        requests.put(f'http://localhost:7777/containers/{container}/grace_time', max_retries=1,  timeout=1, data=f'{10_000_000_000}')
                         del flagged_containers[container]
                         dead_zombies += 1
             else:
