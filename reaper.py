@@ -4,11 +4,26 @@ from collections import Counter
 from time import sleep
 
 import requests
+import signal
 
 from log_utils import configure
 
 configure()
 log = logging.getLogger('reaper')
+log.debug(f'configuring ')
+
+shutdown = False
+
+def prepare_shutdown(s):
+    global shutdown
+    log.info(f'received termination signal: {s}, preparing shutdown')
+    shutdown = True
+
+
+signal.signal(signal.SIGINT, prepare_shutdown)
+signal.signal(signal.SIGTERM, prepare_shutdown)
+
+
 
 flagged_containers = {}
 MAX_LEVEL = 3
@@ -19,7 +34,7 @@ sleep(60)
 log.info(f'🔥 now its time, fueling chainsaw...')
 log.info('')
 dead_zombies_total = 0
-while True:
+while not shutdown:
     try:
         dead_zombies = 0
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
@@ -57,3 +72,4 @@ while True:
         log.info(f'Level {k}: {v} Containers')
 
     sleep(60)
+log.info(f'done with reaping')
