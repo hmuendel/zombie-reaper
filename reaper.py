@@ -40,7 +40,7 @@ while not shutdown:
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
         log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
         for container in containers:
-            status = requests.get(f'http://localhost:7777/containers/{container}/info', max_retries=1, timeout=1).status_code
+            status = requests.get(f'http://localhost:7777/containers/{container}/info', timeout=1).status_code
             if status == 500:
                 if container not in flagged_containers:
                     # log.info(f' First warning for container {container}')
@@ -50,7 +50,7 @@ while not shutdown:
                     if flagged_containers[container] > MAX_LEVEL:
                         # give garden 10 sec to kill the zombie
                         # log.info(f'🧟‍️ 🔫 Die zombie, {container} die!')
-                        requests.put(f'http://localhost:7777/containers/{container}/grace_time', max_retries=1,  timeout=1, data=f'{10_000_000_000}')
+                        requests.put(f'http://localhost:7777/containers/{container}/grace_time', timeout=1, data=f'{10_000_000_000}')
                         del flagged_containers[container]
                         dead_zombies += 1
             else:
