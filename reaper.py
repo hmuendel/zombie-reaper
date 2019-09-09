@@ -40,6 +40,8 @@ while not shutdown:
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
         log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
         for container in containers:
+            if shutdown:
+                break
             status = requests.get(f'http://localhost:7777/containers/{container}/info', timeout=1).status_code
             if status == 500:
                 if container not in flagged_containers:
