@@ -4,7 +4,18 @@ sidecar container to reap garden zombie container that keep popping up in curren
 it can be used inside the values yaml, as a sidecar container for workers
 
 ```yaml
-sidecarContainers:
+  sidecarContainers:
   - name: zombie-reaper
     image: hmuendel/zombie-reaper
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 64Mi
+      requests:
+        cpu: 1m
+        memory: 64Mi
+    volumeMounts:
+      - name: concourse-work-dir
+        mountPath: /concourse-workdir
 ```
