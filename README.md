@@ -8,6 +8,8 @@ it can be used inside the values yaml, as a sidecar container for workers
   - name: zombie-reaper
     image: hmuendel/zombie-reaper
     imagePullPolicy: Always
+     securityContext: 
+      privileged: true
     resources:
       limits:
         cpu: 100m
@@ -17,5 +19,6 @@ it can be used inside the values yaml, as a sidecar container for workers
         memory: 64Mi
     volumeMounts:
       - name: concourse-work-dir
-        mountPath: /concourse-workdir
+        mountPath: /mnt
+        readOnly: true
 ```

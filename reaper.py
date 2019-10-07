@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import logging
-from collections import Counter
+import shutil
+import signal
 from time import sleep
 
 import requests
-import signal
-import shutil
-import os
 from prometheus_client import start_http_server, Gauge, Counter
+
 from log_utils import configure
 
 label_names = []
@@ -27,13 +26,12 @@ log.debug(f'configuring ')
 shutdown = False
 
 
-def emit_metrics(zombies):
+def emit_metrics(zombies, total, used, free):
     try:
-        total, used, free = shutil.disk_usage('/concourse-workdir/volumes')
         TOTAL_SPACE.set(total)
         USED_SPACE.set(used)
         FREE_SPACE.set(free)
-        # ZOMBIES.inc(zombies)
+        ZOMBIES.set(zombies)
 
     except Exception as e:
         print(e)
@@ -60,7 +58,9 @@ log.info('')
 dead_zombies_total = 0
 while not shutdown:
     try:
-        emit_metrics(dead_zombies_total)
+        total, used, free = shutil.disk_usage('/mnt')
+        log.info(f'🤖 disk usage: {used / total * 100:.2f}% of {total/(1024**3):.2f} GiB')
+        emit_metrics(dead_zombies_total, total, used, free)
         dead_zombies = 0
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
         log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
