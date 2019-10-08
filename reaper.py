@@ -32,7 +32,7 @@ def emit_metrics(zombies, total, used, free):
         TOTAL_SPACE.set(total)
         USED_SPACE.set(used)
         FREE_SPACE.set(free)
-        ZOMBIES.set(zombies)
+        ZOMBIES.inc(zombies)
 
     except Exception as e:
         print(e)
@@ -57,11 +57,12 @@ sleep(60)
 log.info(f'🔥 now its time, fueling chainsaw...')
 log.info('')
 dead_zombies_total = 0
+dead_zombies = 0
 while not shutdown:
     try:
         total, used, free = shutil.disk_usage('/mnt')
         log.info(f'🤖 disk usage: {used / total * 100:.2f}% of {total/(1024**3):.2f} GiB')
-        emit_metrics(dead_zombies_total, total, used, free)
+        emit_metrics(dead_zombies, total, used, free)
         dead_zombies = 0
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
         log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
