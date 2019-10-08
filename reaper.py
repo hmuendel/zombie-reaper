@@ -47,6 +47,8 @@ def die(s):
 
 signal.signal(signal.SIGINT, die)
 signal.signal(signal.SIGTERM, die)
+signal.signal(signal.SIGUSR1, die)
+signal.signal(signal.SIGUSR2, die)
 
 flagged_containers = {}
 MAX_LEVEL = 3
