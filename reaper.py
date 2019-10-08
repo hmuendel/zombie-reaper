@@ -2,13 +2,16 @@
 import logging
 import shutil
 import signal
-from time import sleep
 from collections import Counter
+from time import sleep
+
 import requests
-from prometheus_client import start_http_server, Gauge
 from prometheus_client import Counter as PromCounter
+from prometheus_client import start_http_server, Gauge
 
 from log_utils import configure
+
+MAX_NR_OF_CONNECTION_REFUSED = 3
 
 label_names = []
 label_values = []
@@ -24,8 +27,6 @@ configure()
 log = logging.getLogger('reaper')
 log.debug(f'configuring ')
 
-shutdown = False
-
 
 def emit_metrics(zombies, total, used, free):
     try:
@@ -38,14 +39,16 @@ def emit_metrics(zombies, total, used, free):
         print(e)
 
 
-def prepare_shutdown(s, ptr):
-    global shutdown
-    log.info(f'received termination signal: {s}, preparing shutdown')
-    shutdown = True
+def die(s):
+    log.info(f'received termination signal: {s}')
+    log.info('😵 game over')
+    exit()
 
 
-signal.signal(signal.SIGINT, prepare_shutdown)
-signal.signal(signal.SIGTERM, prepare_shutdown)
+signal.signal(signal.SIGINT, die)
+signal.signal(signal.SIGTERM, die)
+signal.signal(signal.SIGUSR1, die)
+signal.signal(signal.SIGUSR2, die)
 
 flagged_containers = {}
 MAX_LEVEL = 3
@@ -58,17 +61,17 @@ log.info(f'🔥 now its time, fueling chainsaw...')
 log.info('')
 dead_zombies_total = 0
 dead_zombies = 0
-while not shutdown:
+
+connection_refused_counter = 0
+while True:
     try:
         total, used, free = shutil.disk_usage('/mnt')
-        log.info(f'🤖 disk usage: {used / total * 100:.2f}% of {total/(1024**3):.2f} GiB')
+        log.info(f'🤖 disk usage: {used / total * 100:.2f}% of {total / (1024 ** 3):.2f} GiB')
         emit_metrics(dead_zombies, total, used, free)
         dead_zombies = 0
         containers = requests.get('http://localhost:7777/containers').json()['Handles']
         log.info(f' 🔭 looking for zombies and found {len(containers)} containers')
         for container in containers:
-            if shutdown:
-                break
             status = requests.get(f'http://localhost:7777/containers/{container}/info', timeout=1).status_code
             if status == 500:
                 if container not in flagged_containers:
@@ -93,6 +96,11 @@ while not shutdown:
         dead_zombies_total += dead_zombies
         log.info(f'killed {dead_zombies} 🧟‍ this round and {dead_zombies_total} in total️')
         log.info(f'{len(flagged_containers)} containers are behaving suspicious')
+        connection_refused_counter = 0
+    except ConnectionRefusedError:
+        connection_refused_counter += 1
+        if connection_refused_counter > MAX_NR_OF_CONNECTION_REFUSED:
+            die('😭 No Signal! Silent Treatment from Garden.')
     except Exception:
         log.exception(f' failed reaping this time, waiting for next round')
 
@@ -102,4 +110,3 @@ while not shutdown:
         log.info(f'Level {k}: {v} Containers')
 
     sleep(60)
-log.info(f'done with reaping')
