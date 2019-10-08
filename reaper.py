@@ -3,9 +3,10 @@ import logging
 import shutil
 import signal
 from time import sleep
-
+from collections import Counter
 import requests
-from prometheus_client import start_http_server, Gauge, Counter
+from prometheus_client import start_http_server, Gauge
+from prometheus_client import Counter as PromCounter
 
 from log_utils import configure
 
@@ -17,7 +18,7 @@ FREE_SPACE = Gauge('concourse_reaper_volumes_space_free_bytes',
                    'the free storage in bytes of the concourse work dir btrfs subvolume', label_names, label_values)
 USED_SPACE = Gauge('concourse_reaper_volumes_space_used_bytes',
                    'the used storage in bytes of the concourse work dir btrfs subvolume', label_names, label_values)
-ZOMBIES = Counter('concourse_reaper_killed_zombies_count', 'total number of slain zombie containers', label_names, label_values)
+ZOMBIES = PromCounter('concourse_reaper_killed_zombies_count', 'total number of slain zombie containers', label_names, label_values)
 
 configure()
 log = logging.getLogger('reaper')
