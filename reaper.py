@@ -97,8 +97,9 @@ while True:
         log.info(f'killed {dead_zombies} 🧟‍ this round and {dead_zombies_total} in total️')
         log.info(f'{len(flagged_containers)} containers are behaving suspicious')
         connection_refused_counter = 0
-    except ConnectionRefusedError:
+    except requests.exceptions.ConnectionError as e:
         connection_refused_counter += 1
+        log.info(f'⏰ connection refused counter: {connection_refused_counter}')
         if connection_refused_counter > MAX_NR_OF_CONNECTION_REFUSED:
             die('😭 No Signal! Silent Treatment from Garden.')
     except Exception:
